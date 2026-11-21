@@ -99,6 +99,61 @@ TEXTS = {
         "admin_broadcast_prompt": "📢 <b>Broadcast Message</b>\n\nEnter message to send to all users:",
         "admin_broadcast_sent": "✅ Broadcast sent to {sent} users ({failed} failed).",
         "admin_status": "🤖 <b>Bot Status</b>\n\n✅ Running\n📦 Database: Connected\n🤖 AI: {ai_status}\n🔧 FFmpeg: {ffmpeg_status}",
+        "status_online": "✅ Online",
+        "status_offline": "❌ Offline",
+        "admin_detailed_stats": "📊 <b>Detailed Statistics</b>\n\n👥 Total Users: {total_users}\n👥 Active (24h): {active_users}\n👥 Active (7d): {active_users_7d}\n📦 Total Processed: {total_processed}\n📂 Total History: {total_history}\n⭐ Total Favorites: {total_favorites}\n\n<b>By Platform:</b>\n{by_platform}\n\n<b>By Media Type:</b>\n{by_media_type}",
+        "no_users_found": "❌ No users found.",
+        "error_invalid_user": "Invalid user ID.",
+        "error_user_not_found": "User not found.",
+        "admin_users_list": "👥 User List",
+        "admin_system_status": "🤖 <b>System Status</b>\n\n🤖 AI: {ai_status}\n🔧 FFmpeg: {ffmpeg_status}\n📦 Database: {db_status}",
+        "no_data": "No data available.",
+
+        # Help & Main Menu
+        "help_message": "ℹ️ <b>Help & About</b>\n\n<b>SaveMate</b> - Your Personal Media Assistant\n\n<b>Features:</b>\n• 📥 Media Assistant - Get info from links\n• 🖼 Image Tools - Convert, compress, info\n• 🎬 Video Tools - Compress, convert, extract audio\n• 🤖 AI Assistant - Chat with AI\n• 📂 History - View your activity\n• ⭐ Favorites - Save importance media\n• ⚙️ Settings - Customize your experience\n\n<b>Supported Platforms:</b>\nYouTube, TikTok, Instagram, Facebook, Pinterest, Direct URLs\n\n<b>Commands:</b>\n/start - Start the bot\n/help - Show this help\n/cancel - Cancel current operation\n\n<i>Version 1.0.0</i>",
+        "main_menu_title": "🏠 <b>Main Menu</b>\n\nChoose an option:",
+        "settings_title": "⚙️ <b>Settings</b>\n\nConfigure your preferences:",
+        "history_title": "📂 <b>My History</b>\n\nRecent activity:",
+        "notifications_settings": "🔔 <b>Notifications</b>\n\nStatus: {status}",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+
+        # Media Tools
+        "image_tools_title": "🖼 <b>Image Tools</b>\n\nSend an image to access tools:",
+        "video_tools_title": "🎬 <b>Video Tools</b>\n\nSend a video to access tools:",
+        "image_received": "🖼 <b>Image Received</b>\n\nFilename: {filename}",
+        "video_received": "🎬 <b>Video Received</b>\n\nFilename: {filename}",
+        "select_convert_format": "🔄 <b>Select Target Format</b>\n\nFor image/video conversion:",
+        "select_compress_preset": "🗜 <b>Select Quality Preset</b>\n\nChoose compression level:",
+        "select_audio_format": "🎵 <b>Select Audio Format</b>\n\nAvailable formats:",
+        "error_unsupported_file_type": "❌ Unsupported file type.",
+        "error_unknown_tool": "❌ Unknown tool selected.",
+        "processing": "⏳ Processing...",
+        "processing_video": "⏳ Processing video...",
+        "conversion_complete": "✅ Conversion complete! Format: {format}",
+        "compression_complete": "✅ Compression complete! Preset: {preset}",
+        "extraction_complete": "✅ Audio extraction complete! Format: {format}",
+        "image_info": "🖼 <b>Image Info</b>\n\nWidth: {width}px\nHeight: {height}px\nFormat: {format}\nMode: {mode}\nSize: {size}",
+        "video_info": "🎬 <b>Video Info</b>\n\nWidth: {width}px\nHeight: {height}px\nDuration: {duration}\nFormat: {format}\nSize: {size}\nFPS: {fps}",
+
+        # Features
+        "file_prefs_coming_soon": "📁 File preferences is coming soon!\n\nStay tuned for future updates.",
+        "confirm_delete_data": "⚠️ <b>Delete All Data</b>\n\nThis will permanently delete:\n• Your account\n• All history\n• All favorites\n\nThis cannot be undone. Continue?",
+
+        # Errors & URLs
+        "error_invalid_url": "❌ Invalid URL: {error}",
+        "processing_url": "⏳ Processing your link...",
+        "error_unsupported_platform": "❌ Unsupported or invalid URL.",
+        "error_processing": "❌ Failed to process: {error}",
+
+        # AI Chat
+        "ai_welcome": "🤖 <b>AI Assistant</b>\n\nAsk me anything! I'm powered by an AI model.\n\n<i>Type your message or use /cancel to exit.</i>",
+        "ai_not_configured": "❌ AI Assistant is currently unavailable.\n\nPlease configure AI_API_KEY, AI_BASE_URL, and AI_MODEL in environment variables.",
+        "ai_error": "❌ AI error: {error}",
+        "ai_context_cleared": "🧹 AI context cleared.",
+
+        # Media Download
+        "feature_coming_soon": "⏳ Feature coming soon!\n\nMedia download integration is not yet available.\n\nThis feature will download media files for you.",
 
         # General
         "error_generic": "❌ An error occurred. Please try again.",

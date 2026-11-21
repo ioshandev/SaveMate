@@ -4,7 +4,7 @@ from typing import Any, Awaitable, Callable, Dict
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, Message, CallbackQuery
 
-from database.db import get_db
+from database.db import get_db_ctx
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,6 @@ class DatabaseMiddleware(BaseMiddleware):
         data: Dict[str, Any],
     ) -> Any:
         # Get database connection
-        async with get_db() as db:
+        async with get_db_ctx() as db:
             data["db"] = db
             return await handler(event, data)

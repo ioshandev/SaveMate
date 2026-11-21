@@ -64,7 +64,8 @@ async def process_url(message: Message, url: str, db: Any, user: Any, lang: str)
             platform=metadata.platform,
             url=url,
             title=metadata.title,
-            media_type=metadata.media_type,
+            action_type="url_processed",
+            media_type=metadata.file_type or "unknown",
             thumbnail_url=metadata.thumbnail_url,
         )
 
@@ -103,8 +104,8 @@ def format_metadata(metadata: Any, lang: str) -> str:
     if metadata.duration:
         lines.append(f"⏱ <b>Duration:</b> {format_duration(metadata.duration)}")
 
-    if metadata.media_type:
-        lines.append(f"📎 <b>Type:</b> {metadata.media_type}")
+    if metadata.file_type:
+        lines.append(f"📎 <b>Type:</b> {metadata.file_type}")
 
     return "\n".join(lines)
 

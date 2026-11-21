@@ -143,13 +143,3 @@ async def main() -> None:
         await bot.delete_webhook(drop_pending_updates=True)
         logger.info("Bot started polling")
         await dp.start_polling(bot)
-
-
-if __name__ == "__main__":
-    try:
-        asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Bot stopped by user")
-    except Exception as e:
-        logger.exception("Fatal error: %s", e)
-        sys.exit(1)

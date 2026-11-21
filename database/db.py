@@ -33,6 +33,8 @@ CREATE TABLE IF NOT EXISTS history (
     file_id TEXT,
     file_name TEXT,
     file_size INTEGER,
+    media_type TEXT,
+    thumbnail_url TEXT,
     result_status TEXT NOT NULL,
     error_message TEXT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

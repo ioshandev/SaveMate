@@ -1,7 +1,11 @@
 import json
 from dataclasses import dataclass
-from typing import Optional, Any, List, Type
+from typing import Optional, Any, List, Type, Union
 
+from aiogram.filters import BaseFilter
+from aiogram.types import CallbackQuery
+from aiogram import F as AiogramF
+from aiogram.utils.magic_filter import MagicFilter
 
 # Registry of all CallbackData subclasses for unpack_callback
 _CALLBACK_REGISTRY: List[Type['CallbackData']] = []
@@ -39,6 +43,35 @@ class CallbackData:
             return cls(action=action, **parsed)
         except (json.JSONDecodeError, TypeError):
             return None
+
+    @classmethod
+    def filter(
+        cls,
+        condition: Optional[MagicFilter] = None,
+        **kwargs
+    ) -> Union["CallbackDataFilter", MagicFilter]:
+        """Create a filter for this callback data type.
+
+        This supports two modes:
+        1. Using MagicFilter directly: MyCallback.filter(F.field == value)
+        2. Using keyword arguments: MyCallback.filter(field=value)
+
+        Usage in aiogram 3.x router:
+            @router.callback_query(MyCallback.filter(F.field == value))
+            @router.callback_query(MyCallback.filter(field=value))
+        """
+        if condition is not None:
+            # MagicFilter mode - wrap it
+            return CallbackDataFilter(cls, magic_filter=condition)
+        elif kwargs:
+            # Keyword argument mode - convert to MagicFilter checks
+            magic_filter = AiogramF
+            for field, value in kwargs.items():
+                magic_filter = magic_filter.__getattr__(field) == value
+            return CallbackDataFilter(cls, magic_filter=magic_filter)
+        else:
+            # No conditions - accept any callback data of this type
+            return CallbackDataFilter(cls)
 
 
 # Main Menu Callbacks
@@ -200,6 +233,46 @@ class PaginationCallback(CallbackData):
     """Generic pagination."""
     page: int
     context: str  # history, favorites, admin_users, etc.
+
+
+class CallbackDataFilter(BaseFilter):
+    """Filter for aiogram 3.x routers that matches callback data against a CallbackData subclass.
+
+    Example usage:
+        @router.callback_query(MyCallback.filter(F.field == value))
+        async def handler(callback: CallbackQuery, ...):
+            ...
+    """
+
+    def __init__(
+        self,
+        callback_class: Type[CallbackData],
+        magic_filter: Optional[MagicFilter] = None
+    ):
+        self.callback_class = callback_class
+        self.magic_filter = magic_filter
+
+    async def __call__(self, callback: CallbackQuery) -> Union[bool, MagicFilter]:
+        """Check if callback data matches the filter conditions."""
+        parsed = unpack_callback(callback.data)
+        if parsed is None:
+            return False
+        if not isinstance(parsed, self.callback_class):
+            return False
+
+        # If we have a magic filter, evaluate it on the parsed data
+        if self.magic_filter is not None:
+            # Create a mock object that has the parsed data as attributes
+            class ParsedCallbackData:
+                def __init__(self, data):
+                    self.__dict__.update(data.__dict__)
+
+            mock_data = ParsedCallbackData(parsed)
+            # MagicFilter expects a TelegramObject, so we need to work with it
+            result = await self.magic_filter(mock_data)
+            return result
+
+        return True
 
 
 # Utility functions

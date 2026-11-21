@@ -30,6 +30,8 @@
 
 ## Quick Start (Windows)
 
+> 📖 **Full Setup Guide:** See [SETUP.md](SETUP.md) for detailed step-by-step instructions on getting Telegram tokens, admin IDs, AI keys, systemd services, and Linux/macOS installation.
+
 ### 1. Clone & Setup
 
 ```cmd
@@ -174,17 +176,17 @@ All settings in `.env` (loaded via `config.py`):
 |----------|----------|---------|-------------|
 | `BOT_TOKEN` | ✅ | — | Telegram bot token from @BotFather |
 | `ADMIN_IDS` | ✅ | — | Comma-separated Telegram user IDs |
-| `AI_API_KEY` | ❌ | — | OpenAI-compatible API key |
-| `AI_BASE_URL` | ❌ | `https://api.openai.com/v1` | API base URL |
+| `AI_API_KEY` | ❌ | — | OpenAI-compatible API key (optional, disables AI features if not set) |
+| `AI_BASE_URL` | ❌ | `https://api.openai.com/v1` | API base URL (OpenAI-compatible) |
 | `AI_MODEL` | ❌ | `gpt-4o-mini` | Model name |
-| `DB_PATH` | ❌ | `data/bot.db` | SQLite database path |
-| `TEMP_DIR` | ❌ | `storage/temp` | Temporary files directory |
-| `DOWNLOAD_DIR` | ❌ | `storage/downloads` | Downloads directory |
-| `MAX_FILE_SIZE_MB` | ❌ | `50` | Max upload size |
-| `RATE_LIMIT_MEDIA_DOWNLOAD` | ❌ | `10` | Media downloads per minute |
-| `RATE_LIMIT_MEDIA_PROCESS` | ❌ | `5` | Media processing per minute |
-| `RATE_LIMIT_AI_CHAT` | ❌ | `20` | AI chat messages per minute |
-| `LOG_LEVEL` | ❌ | `INFO` | Logging level |
+| `DATABASE_PATH` | ❌ | `storage/database.sqlite3` | SQLite database file path |
+| `MAX_FILE_SIZE` | ❌ | `52428800` | Max upload file size in bytes |
+| `MAX_DOWNLOAD_SIZE` | ❌ | `104857600` | Max media download size in bytes |
+| `RATE_LIMIT_MESSAGES` | ❌ | `30` | Max messages per window |
+| `RATE_LIMIT_WINDOW` | ❌ | `60` | Rate limit window in seconds |
+| `TEMP_FILE_TTL` | ❌ | `3600` | Temporary file TTL in seconds |
+| `DEFAULT_LANGUAGE` | ❌ | `en` | Default language (`en` or `si`) |
+| `LOG_LEVEL` | ❌ | `INFO` | Logging level (`DEBUG`, `INFO`, `WARNING`, `ERROR`) |
 
 ---
 
@@ -270,15 +272,28 @@ In-memory sliding window (`core/rate_limit.py`):
 ```python
 from core.rate_limit import rate_limiter
 
-await rate_limiter.check_limit(user_id, "media_download", limit=10, window=60)
+# Check rate limit
+allowed, retry_after = await rate_limiter.check_rate_limit(user_id, "ai_chat", limit=20, window=60)
+if not allowed:
+    print(f"Rate limited. Wait {retry_after}s")
 ```
 
-Default limits (configurable via env):
-- `media_download`: 10/min
-- `media_process`: 5/min
-- `ai_chat`: 20/min
-- `settings_change`: 30/min
-- `admin_action`: 100/min
+Default limits (applied via `ThrottlingMiddleware`):
+
+| Action | Limit | Window |
+|--------|-------|--------|
+| messages | 30 | 60s |
+| media_download | 10 | 60s |
+| media_process | 5 | 60s |
+| ai_chat | 20 | 60s |
+| history | 30 | 60s |
+| favorites | 30 | 60s |
+| settings | 30 | 60s |
+| admin | 100 | 60s |
+
+---
+
+## Database Schema (SQLite + WAL)
 
 ---
 
@@ -286,40 +301,54 @@ Default limits (configurable via env):
 
 ```sql
 -- Users
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY,
     username TEXT,
     first_name TEXT,
+    last_name TEXT,
     language TEXT DEFAULT 'en',
-    notifications BOOLEAN DEFAULT 1,
+    registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     total_processed INTEGER DEFAULT 0,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    last_activity TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    notifications_enabled INTEGER DEFAULT 1,
+    last_activity TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
 -- History
-CREATE TABLE history (
+CREATE TABLE IF NOT EXISTS history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
-    action TEXT,
+    user_id INTEGER NOT NULL,
+    action_type TEXT NOT NULL,
     platform TEXT,
-    url TEXT,
-    metadata TEXT,
-    status TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    original_url TEXT,
+    file_id TEXT,
+    file_name TEXT,
+    file_size INTEGER,
+    media_type TEXT,
+    thumbnail_url TEXT,
+    result_status TEXT NOT NULL,
+    error_message TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 -- Favorites
-CREATE TABLE favorites (
+CREATE TABLE IF NOT EXISTS favorites (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER REFERENCES users(id),
+    user_id INTEGER NOT NULL,
+    file_id TEXT NOT NULL,
+    file_type TEXT NOT NULL,
+    file_name TEXT,
+    file_size INTEGER,
+    caption TEXT,
     platform TEXT,
-    url TEXT,
-    title TEXT,
-    metadata TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    original_url TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 ```
+
+**WAL Mode:** SQLite uses Write-Ahead Logging for improved concurrent read performance.
 
 ---
 
@@ -330,21 +359,26 @@ CREATE TABLE favorites (
 services:
   bot:
     build: .
-    volumes:
-      - ./data:/app/data
-      - ./storage:/app/storage
-    env_file: .env
+    container_name: savemate-bot
     restart: unless-stopped
+    env_file:
+      - .env
+    volumes:
+      - ./storage:/app/storage
+    environment:
+      - PYTHONUNBUFFERED=1
 ```
 
 ```dockerfile
 # Dockerfile
 FROM python:3.12-slim
-RUN apt-get update && apt-get install -y ffmpeg && rm -rf /var/lib/apt/lists/*
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 PIP_DISABLE_PIP_VERSION_CHECK=1
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
+RUN mkdir -p storage/temp storage/downloads && touch storage/temp/.gitkeep storage/downloads/.gitkeep
 CMD ["python", "main.py"]
 ```
 

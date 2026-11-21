@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --sidebar-width: 6rem;
+}
+
+/* Dark theme colors matching our design system */
+[data-theme="dark"] {
+  --background: 210 20% 5%;
+  --foreground: 0 0% 93%;
+  --primary: 220 80% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 70% 60%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 220 10% 15%;
+  --muted-foreground: 220 10% 60%;
+  --accent: 220 80% 65%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 80% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 220 10% 25%;
+  --input: 220 10% 25%;
+  --ring: 220 80% 60%;
+  --radius: 0.5rem;
+}
+
+.min-h-screen {
+  min-height: 100vh;
+}
+
+.card {
+  @apply rounded-xl border bg-slate-900/50 shadow-lg backdrop-blur-sm;
+  border-color: hsl(var(--border));
+}
+
+.gradient-text {
+  background: linear-gradient(90deg, hsl(var(--primary)), hsl(var(--accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Smooth transitions */
+.transition-smooth {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: hsl(var(--muted));
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--ring));
+  border-radius: 0.5rem;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--accent));
+}

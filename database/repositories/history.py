@@ -40,9 +40,9 @@ class HistoryRepository:
         """Add a history entry."""
         cursor = await self.db.execute(
             """INSERT INTO history
-            (user_id, action_type, platform, original_url, file_id, file_name, result_status)
-            VALUES (?, ?, ?, ?, ?, ?, ?)""",
-            (user_id, action_type, platform, url, None, title, "success")
+            (user_id, action_type, platform, original_url, file_id, file_name, media_type, thumbnail_url, result_status)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (user_id, action_type, platform, url, None, title, media_type, thumbnail_url, "success")
         )
         await self.db.commit()
         return cursor.lastrowid
@@ -69,6 +69,8 @@ class HistoryRepository:
                 "file_name": row["file_name"],
                 "title": row["file_name"],  # Alias for backward compatibility
                 "file_size": row["file_size"],
+                "media_type": row["media_type"] if "media_type" in row.keys() else "unknown",
+                "thumbnail_url": row["thumbnail_url"],
                 "result_status": row["result_status"],
                 "error_message": row["error_message"],
                 "created_at": row["created_at"],
